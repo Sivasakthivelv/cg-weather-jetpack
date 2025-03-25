@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Weather App</string>
+    <string name="search_for_any_city">"Search for any city "</string>
+    <string name="humidity">Humidity</string>
+    <string name="wind_speed">Wind Speed</string>
+    <string name="today">Today</string>
+    <string name="upcoming_day">Upcoming Days Forecast</string>
+</resources>
