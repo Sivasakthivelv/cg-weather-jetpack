@@ -27,8 +27,8 @@ Before running the app, ensure you have the following installed on your machine:
 * OpenWeatherMap API Key or other weather service API key
 
 **Usage**
-1.Search for Location: Enter a city name in the search bar to get the weather data for that location.
-2.View Weather Details: The app displays current weather conditions, temperature, humidity, wind speed, hourly basic tempature for the current date, Forecast for upcoming dates and description.
+1. Search for Location: Enter a city name in the search bar to get the weather data for that location.
+2. View Weather Details: The app displays current weather conditions, temperature, humidity, wind speed, hourly basic tempature for the current date, Forecast for upcoming dates and description.
 
 **Screenshots**
 ![Screenshot_20250327_223756](https://github.com/user-attachments/assets/69abba04-b81f-4787-8ea6-aabaa2bc1b96)
