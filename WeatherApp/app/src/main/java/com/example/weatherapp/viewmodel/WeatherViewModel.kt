@@ -6,6 +6,11 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkInfo
+import androidx.work.WorkManager
+import com.example.weatherapp.BuildConfig
+import com.example.weatherapp.InternetCheckWorker
 import com.example.weatherapp.apiservice.NetworkResponse
 import com.example.weatherapp.apiservice.RetrofitInstance
 import com.example.weatherapp.database.SearchHistoryDao
@@ -24,13 +29,30 @@ class WeatherViewModel(application: Application) : AndroidViewModel(application)
     private val _weatherResult = MutableLiveData<NetworkResponse<WeatherResponse>>()
     val weatherResult: LiveData<NetworkResponse<WeatherResponse>> = _weatherResult
 
+    private val _internetStatus = MutableLiveData(false)
+    val internetStatus: LiveData<Boolean> = _internetStatus
+
+    fun checkInternetStatus() {
+        val workRequest = OneTimeWorkRequestBuilder<InternetCheckWorker>()
+            .build()
+
+        WorkManager.getInstance(getApplication()).enqueue(workRequest)
+
+        WorkManager.getInstance(getApplication())
+            .getWorkInfoByIdLiveData(workRequest.id)
+            .observeForever { workInfo ->
+                _internetStatus.value = workInfo?.state == WorkInfo.State.SUCCEEDED
+            }
+    }
+
     fun getData(city: String) {
+        val apikey  = BuildConfig.API_KEY
         val cityData = SearchHistoryList(0, city)
         _weatherResult.value = NetworkResponse.Loading
         viewModelScope.launch {
             try {
                 val response =
-                    apiService.getWeather("7b1f1cac04d9439aac3151330250903", city, "6", "no", "no")
+                    apiService.getWeather(apikey, city, "6", "no", "no")
                 if (response.isSuccessful) {
                     addTask(cityData)
                     response.body()?.let {

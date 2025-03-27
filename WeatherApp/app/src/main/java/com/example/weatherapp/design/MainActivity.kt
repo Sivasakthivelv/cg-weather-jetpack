@@ -1,4 +1,4 @@
-package com.example.weatherapp
+package com.example.weatherapp.design
 
 import android.content.Context
 import android.net.ConnectivityManager
@@ -7,10 +7,8 @@ import android.os.Build.VERSION_CODES
 import android.os.Bundle
 import android.view.View
 import android.view.WindowManager
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -40,11 +38,13 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -57,6 +57,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -64,11 +65,14 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModelProvider
 import coil.annotation.ExperimentalCoilApi
 import coil.compose.rememberImagePainter
+import com.example.weatherapp.R
 import com.example.weatherapp.apiservice.NetworkResponse
 import com.example.weatherapp.remotedata.Forecastday
 import com.example.weatherapp.remotedata.Hour
 import com.example.weatherapp.remotedata.WeatherResponse
 import com.example.weatherapp.viewmodel.WeatherViewModel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -81,6 +85,7 @@ class MainActivity : ComponentActivity() {
         //enableEdgeToEdge()
         setContent {
             val weatherViewModel = ViewModelProvider(this)[WeatherViewModel::class.java]
+            weatherViewModel.checkInternetStatus()
             SearchTool(weatherViewModel)
         }
         window.setFlags(
@@ -92,6 +97,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+
 @RequiresApi(VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -99,9 +105,8 @@ private fun SearchTool(weatherViewModel: WeatherViewModel) {
     var city by remember { mutableStateOf("") }
     val weatherResult = weatherViewModel.weatherResult.observeAsState()
     val keyboardController = LocalSoftwareKeyboardController.current
-    var isInternetAvailable by remember { mutableStateOf(true) }
     var isCity by remember { mutableStateOf(true) }
-    val context = LocalContext.current
+    val internetStatus = weatherViewModel.internetStatus.observeAsState().value
 
     Box(
         modifier = Modifier
@@ -137,19 +142,19 @@ private fun SearchTool(weatherViewModel: WeatherViewModel) {
                     )
 
                 )
-                LaunchedEffect(Unit) {
-                    isInternetAvailable = checkInternetConnectivity(context)
-                }
 
                 IconButton(onClick = {
                     keyboardController?.hide()
-                    if (city != "") {
-                        isCity = true
-                        weatherViewModel.getData(city)
-                    }else{
-                        isCity = false
+                    if (internetStatus == true) {
+                        if (city != "") {
+                            isCity = true
+                            weatherViewModel.getData(city)
+                        } else {
+                            isCity = false
+                        }
+                    } else {
+                        weatherViewModel.checkInternetStatus()
                     }
-
                 }) {
                     Icon(
                         modifier = Modifier.size(30.dp),
@@ -158,11 +163,12 @@ private fun SearchTool(weatherViewModel: WeatherViewModel) {
                     )
                 }
             }
-            if (!isInternetAvailable) {
-                EmptyDatatView("No Internet Please check Connectivity")
-            }
+
             if (!isCity) {
-                EmptyDatatView("Please Enter the Location")
+                EmptyDataView(stringResource(R.string.please_enter_location))
+            }
+            if (internetStatus == false) {
+                EmptyDataView(stringResource(R.string.no_internet))
             }
             when (val result = weatherResult.value) {
                 is NetworkResponse.Error -> {
@@ -324,10 +330,6 @@ fun WeatherScreen(data: WeatherResponse) {
                 }
             }
 
-
-            /* item {
-                 ForecastView(data)
-             }*/
             item {
                 Column(
                     modifier = Modifier
@@ -357,11 +359,11 @@ fun WeatherScreen(data: WeatherResponse) {
 }
 
 @Composable
-fun EmptyDatatView(label: String) {
+fun EmptyDataView(label: String) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
             text = label,
-            color = colorResource(R.color.white),
+            color = colorResource(R.color.black),
             fontSize = 20.sp,
             modifier = Modifier
                 .fillMaxWidth()
@@ -371,7 +373,7 @@ fun EmptyDatatView(label: String) {
     }
 }
 
-@RequiresApi(VERSION_CODES.O)
+/*@RequiresApi(VERSION_CODES.O)
 @Composable
 fun ForecastView(data: WeatherResponse) {
     val forecastData = data.forecast.forecastday
@@ -402,7 +404,7 @@ fun ForecastView(data: WeatherResponse) {
         }
 
     }
-}
+}*/
 
 
 @RequiresApi(VERSION_CODES.O)
@@ -571,7 +573,8 @@ fun checkInternetConnectivity(context: Context): Boolean {
     val networkCapabilities = connectivityManager.getNetworkCapabilities(network)
     return networkCapabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true
 }
-
-fun showToast(context: Context, message: String) {
-    Toast.makeText(context, message, Toast.LENGTH_LONG).show()
-}
+val customTextStyle = TextStyle(
+    color = Color.Blue,  // Text color
+    fontSize = 24.sp,     // Font size
+    fontWeight = FontWeight.Bold // Font weight
+)

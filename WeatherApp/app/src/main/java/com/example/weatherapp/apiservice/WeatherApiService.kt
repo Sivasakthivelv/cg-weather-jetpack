@@ -18,22 +18,5 @@ interface WeatherApiService {
         @Query("alerts") alerts: String = "no"
     ): Response<WeatherResponse>
 
-    @GET("v1/current.json?")
-    suspend fun getCurrentWeather(
-        @Query("key") apiKey: String,
-        @Query("q") city: String,
-        @Query("aqi") aqi: String = "no",
-    ): Response<CurrentWeatherResponse>
 
-    /*  companion object {
-          private const val BASE_URL = "https://api.openweathermap.org/data/2.5/"
-
-          fun create(): WeatherApiService {
-              return Retrofit.Builder()
-                  .baseUrl(BASE_URL)
-                  .addConverterFactory(GsonConverterFactory.create())
-                  .build()
-                  .create(WeatherApiService::class.java)
-          }
-      }*/
 }

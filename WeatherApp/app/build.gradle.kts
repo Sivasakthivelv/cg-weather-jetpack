@@ -22,6 +22,10 @@ android {
     }
 
     buildTypes {
+        getByName("debug") {
+            // Define the API key for the debug build
+            buildConfigField("String", "API_KEY", "\"${project.findProperty("API_KEY_DEV") ?: "default_api_key"}\"")
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(
@@ -39,7 +43,7 @@ android {
     }
     buildFeatures {
         compose = true
-
+        buildConfig = true
     }
 }
 
@@ -73,7 +77,7 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     implementation(libs.androidx.room.runtime)
 
-
+    implementation( libs.androidx.work.runtime.ktx)
 
 
 
